@@ -1,0 +1,70 @@
+---
+title: "regmodel"
+author: "sarwar"
+date: "July 17, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+##Data frame
+```{r alligator}
+alligator = data.frame(
+  lnLength = c(3.87, 3.61, 4.33, 3.43, 3.81, 3.83, 3.46, 3.76,
+    3.50, 3.58, 4.19, 3.78, 3.71, 3.73, 3.78),
+  lnWeight = c(4.87, 3.93, 6.46, 3.33, 4.38, 4.70, 3.50, 4.50,
+    3.58, 3.64, 5.90, 4.43, 4.38, 4.42, 4.25)
+)
+```
+
+```{r alligator1}
+summary(alligator)
+```
+
+## Including Plots
+```{r test, echo=FALSE}
+
+library(lattice)
+#table(alligator$lnLength, alligator$lnWeight)
+xyplot(lnWeight ~ lnLength, data = alligator,
+  xlab = "Snout vent length (inches) on log scale",
+  ylab = "Weight (pounds) on log scale",
+  main = "Alligators in Central Florida"
+)
+```
+
+```{r linear model}
+alli.mod1 = lm(lnWeight ~ lnLength, data = alligator)
+summary(alli.mod1)
+```
+
+```{r residual, echo=FALSE}
+
+xyplot(resid(alli.mod1) ~ fitted(alli.mod1),
+  xlab = "Fitted Values",
+  ylab = "Residuals",
+  main = "Residual Diagnostic Plot",
+  panel = function(x, y, ...)
+  {
+    panel.grid(h = -1, v = -1)
+    panel.abline(h = 0)
+    panel.xyplot(x, y, ...)
+  }
+)
+```
+
+```{r quantile}
+qqmath( ~ resid(alli.mod1),
+  xlab = "Theoretical Quantiles",
+  ylab = "Residuals"
+)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
