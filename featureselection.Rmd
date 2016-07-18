@@ -24,13 +24,40 @@ When you click the **Knit** button a document will be generated that includes bo
 ```
 ```{r}
 data1 <- read.csv(file.choose(), header=T)
+#setwd("d:/desktop/currentwork/teldata.csv")
 ```
 ```{r}
-regsubsets(timeStamp ~ epoch_time +userID + CONNECT + user_allowed_authorization ,  data=data1, nvmax = 4)
+shortlist <- data1[,c("timeStamp","UserID", "CONNECT", "epoch_time")]
+summary(shortlist)
+```
+```{r}
+library("lattice")
+```
+```{r}
+tstamp <- data1[,c("epoch_time","UserID")]
+#xyplot(epoch_time ~ UserID, tstamp)
+library("hexbin")
+hexbinplot(UserID ~ epoch_time, tstamp,
+           scales = list(x = list(log = 10, equispaced.log = FALSE)),
+           aspect = 1, bins=50)
 ```
 
 ```{r}
-reg1=regsubsets(timeStamp ~ epoch_time +userID + CONNECT + user_allowed_authorization + user_succeeded_authentication
+#tstamp <- data1[,c("timeStamp","UserID")]
+xyplot(epoch_time ~ UserID, data = tstamp,
+  xlab = "Snout vent length (inches) on log scale",
+  ylab = "Weight (pounds) on log scale",
+  main = "Alligators in Central Florida"
+)
+
+```
+
+```{r}
+regsubsets(timeStamp ~ epoch_time +UserID + CONNECT ,  data=shortlist, nvmax = 4)
+```
+
+```{r}
+reg1=regsubsets(timeStamp ~ epoch_time +UserID + CONNECT + user_allowed_authorization + user_succeeded_authentication
 + msisdn_login_submitted,  data=data1, method="backward")
 ```
 
@@ -38,28 +65,32 @@ reg1=regsubsets(timeStamp ~ epoch_time +userID + CONNECT + user_allowed_authoriz
 summary(reg1)
 ```
 ```{r}
-reg2=regsubsets(timeStamp ~ epoch_time +userID + CONNECT + user_allowed_authorization + user_succeeded_authentication
+reg2=regsubsets(timeStamp ~ epoch_time +UserID + CONNECT + user_allowed_authorization + user_succeeded_authentication
 + msisdn_login_submitted,  data=data1, method="backward")
 ```
-
+#Explanation of the result of summary
+#for the best subset of size 1, it puts 1 star next to the variable that's in the best subset of size 1.
+#for the best subset of size 2, it puts 2 stars next to the variables that are in the best subset of size 2
 ```{r}
 summary(reg2)
 ```
+
+```{r}
+reg3=regsubsets(timeStamp ~ UserID + CONNECT + user_allowed_authorization,  data=data1, method="backward")
+```
+```{r reg3}
+summary(reg3)
+```
 # Other useful functions 
 ```{r}
-
-coefficients(reg2) # model coefficients
-confint(reg2, level=0.95) # CIs for model parameters 
-fitted(reg2) # predicted values
-residuals(reg2) # residuals
-anova(reg2) # anova table 
-vcov(reg2) # covariance matrix for model parameters 
-influence(reg2) # regression diagnostics
+#reg4=data.frame(y <-c(UserID),x1=c(timeStamp))
 ```
+
+
 
 ```{r}
 # diagnostic plots 
-layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
+layout(matrix(c(1,2,3,4),8,8)) # optional 4 graphs/page 
 plot(reg2)
 ```
 
