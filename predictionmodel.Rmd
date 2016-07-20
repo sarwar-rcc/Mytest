@@ -2,7 +2,7 @@
 title: "featureselection"
 author: "sarwar"
 date: "July 19, 2016"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -12,7 +12,16 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Description of the work
 ```{r}
 #Given dataset is a size of I GB individual log in data with 21 individual parameters such as timestamp, epoch time, user ID, individual cloud, connection status, MSISDN login submission failure status, user activation submission status, user authorization status, email verification status, email verification failure status, MSISDN register page, MSISDN register page submission failure status, availability, user denied authorization status, user succeeded authentication, email login submission status,  MSISDN login submission status, new user creation status, and user activation submission status.
+
+#By studying observable data following information can be analyzed from the given dataset
+#1.How many connected user in a certain time period would be succesfully authorized or failed
+#2. Epoc time share ratio
+#3. Availability of a user in a certain timestamp or time period
+#4. Probability of new user creation in comeing timestamps
+#5. Probaility of user to be connected in a certain period
+#6. Probability of new user activation submitted
 ```
+
 ## Process of the work
 ```{r}
 #To develop a prediction model, we need to do the following steps:
@@ -35,17 +44,20 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r packages2}
  require(MASS)
 ```
+
 ###Data reading
 ```{r Data Processing}
 rdata <- read.csv(file.choose(), header=T)
 
 ```
+
 ##Create Data frame
 ```{r transfer data to R object}
 dataobj <- rdata[,c("timeStamp","epoch_time","UserID","MY_CLOUD","CONNECT","msisdn_login_submitted_failed","user_activation_submitted_failed","user_allowed_authorization","email_verification_submitted","email_verification_submitted_failed","msisdn_register_page","msisdn_register_submitted_failed","msisdn_register_submitted","email_login_submitted_faile","availability","user_denied_authorization","user_succeeded_authentication","email_login_submitted","msisdn_login_submitted","new_user_created","user_activation_submitted")]
 
 summary(dataobj)
 ```
+
 ```{r transfer data to individual r object}
 Timestamp <- rdata[,c("timeStamp")]
 UserID <- rdata[,c("UserID")]
@@ -82,6 +94,7 @@ xyplot(UserID ~ Timestamp, data = rdata,
 )
 
 ```
+
 ```{r}
 
 library("hexbin")
@@ -90,17 +103,28 @@ hexbinplot(UserID ~ epoch_time, dataobj,
            aspect = 1, bins=50)
 ```
 
-
 ```{r}
 # diagnostic plots 
 layout(matrix(c(1,2,3,4),8,8)) # optional 4 graphs/page 
 plot(reg)
 
 ```
+
 ```{r}
 plot(reg,scale="adjr2")
 ```
-
+```{r}
+# Scatterplot Matrices from the glus Package 
+library(car)
+scatterplot.matrix(~timeStamp+UserID+epoch_time|CONNECT, data=dataobj,
+  	main="User's Connection status")
+```
+```{r}
+# Scatterplot Matrices from the glus Package 
+library(car)
+scatterplot.matrix(~timeStamp+MY_CLOUD|UserID, data=dataobj,
+  	main="User's service status")
+```
 #Data Modeling
 
 ```{r linear modeling}
@@ -124,6 +148,7 @@ xyplot(resid(con.mod1) ~ fitted(con.mod1),
   }
 )
 ```
+
 ```{r}
 #The plot is probably ok but there are more cases of positive residuals and when we consider a normal probability plot we see that there are some deficiencies with the model:
 #The function resid extracts the model residuals from the fitted model object. The plot is shown here:
@@ -134,4 +159,25 @@ qqmath( ~ resid(con.mod1),
 
 ```
 
+## Logistic Regression Model
+```{r}
+# Since most of the dependent data are binary i.e. 0 or 1, logistic regression model would be more fit
+```
+
+```{r}
+library(aod)
+library(ggplot2)
+library(Rcpp)
+```
+
+```{r}
+# Previously we summarized the data set. Now to get the standard deviations, we use sapply to apply the sd function to manually observable variable in the dataset.
+sapply(rdata,sd)
+```
+
+```{r}
+## two-way contingency table of categorical outcome and predictors
+## we want to make sure there are not 0 cells
+xtabs(~ UserID + CONNECT, data = rdata)
+```
 
