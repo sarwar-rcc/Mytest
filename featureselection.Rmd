@@ -9,11 +9,25 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Description of the work
+```{r}
+#Given dataset is a size of I GB individual log in data with 21 individual parameters such as timestamp, epoch time, user ID, individual cloud, connection status, MSISDN login submission failure status, user activation submission status, user authorization status, email verification status, email verification failure status, MSISDN register page, MSISDN register page submission failure status, availability, user denied authorization status, user succeeded authentication, email login submission status,  MSISDN login submission status, new user creation status, and user activation submission status.
+```
+## Process of the work
+```{r}
+#To develop a prediction model, we need to do the following steps:
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+#1. What are the individual data mean in the given data set?
+#2. Using Features selections find the correlation between the data in the data set
+#3. What are the dependent and independent data in the data set?
+#4. Create linear regression model
+#5. Find the coefficients and residual
+#6. Determine the residual is appropriate or not?
+#7. Predict value using the regression modle
+#8. Cross validate the prediction model
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```
+
 
 ```{r packages}
  require(leaps)
@@ -30,11 +44,41 @@ data1 <- read.csv(file.choose(), header=T)
 shortlist <- data1[,c("timeStamp","UserID", "CONNECT", "epoch_time")]
 summary(shortlist)
 ```
+```{r transfer data to r object}
+Timestamp <- data1[,c("timeStamp")]
+UserID <- data1[,c("UserID")]
+Connect <- data1[,c("CONNECT")]
+fit <- lm(Connect ~ Timestamp + UserID)
+summary(fit)
+
+```
+```{r}
+# Add fit lines
+library(car) 
+scatterplot(Connect ~ UserID | UserID, data=mtcars, 
+  	xlab="Weight of Car", ylab="Miles Per Gallon", 
+   main="Enhanced Scatter Plot", 
+   labels=row.names(shortlist))
+```
+```{r}
+# Scatterplot Matrices from the glus Package 
+library(car)
+scatterplot.matrix(~timeStamp+UserID+epoch_time|CONNECT, data=shortlist,
+  	main="User's Connection status")
+```
+```{r}
+# Another Spinning 3d Scatterplot
+library(rgl)
+plot3d(Timestamp, UserID, Connect, col="red", size=3)
+```
+
+
 ```{r}
 library("lattice")
 ```
 ```{r}
 tstamp <- data1[,c("epoch_time","UserID")]
+tstamp1 <- data1[,c("UserID","timeStamp")]
 #xyplot(epoch_time ~ UserID, tstamp)
 library("hexbin")
 hexbinplot(UserID ~ epoch_time, tstamp,
@@ -44,7 +88,7 @@ hexbinplot(UserID ~ epoch_time, tstamp,
 
 ```{r}
 #tstamp <- data1[,c("timeStamp","UserID")]
-xyplot(epoch_time ~ UserID, data = tstamp,
+xyplot(UserID ~ timeStamp, data = tstamp1,
   xlab = "Snout vent length (inches) on log scale",
   ylab = "Weight (pounds) on log scale",
   main = "Alligators in Central Florida"

@@ -1,0 +1,137 @@
+---
+title: "featureselection"
+author: "sarwar"
+date: "July 19, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Description of the work
+```{r}
+#Given dataset is a size of I GB individual log in data with 21 individual parameters such as timestamp, epoch time, user ID, individual cloud, connection status, MSISDN login submission failure status, user activation submission status, user authorization status, email verification status, email verification failure status, MSISDN register page, MSISDN register page submission failure status, availability, user denied authorization status, user succeeded authentication, email login submission status,  MSISDN login submission status, new user creation status, and user activation submission status.
+```
+## Process of the work
+```{r}
+#To develop a prediction model, we need to do the following steps:
+
+#1. What are the individual data mean in the given data set?
+#2. Using Features selections find the correlation between the data in the data set
+#3. What are the dependent and independent data in the data set?
+#4. Create linear regression model
+#5. Find the coefficients and residual
+#6. Determine the residual is appropriate or not?
+#7. Predict value using the regression modle
+#8. Cross validate the prediction model
+
+```
+
+```{r packages}
+ require(leaps)
+```
+
+```{r packages2}
+ require(MASS)
+```
+###Data reading
+```{r Data Processing}
+rdata <- read.csv(file.choose(), header=T)
+
+```
+##Create Data frame
+```{r transfer data to R object}
+dataobj <- rdata[,c("timeStamp","epoch_time","UserID","MY_CLOUD","CONNECT","msisdn_login_submitted_failed","user_activation_submitted_failed","user_allowed_authorization","email_verification_submitted","email_verification_submitted_failed","msisdn_register_page","msisdn_register_submitted_failed","msisdn_register_submitted","email_login_submitted_faile","availability","user_denied_authorization","user_succeeded_authentication","email_login_submitted","msisdn_login_submitted","new_user_created","user_activation_submitted")]
+
+summary(dataobj)
+```
+```{r transfer data to individual r object}
+Timestamp <- rdata[,c("timeStamp")]
+UserID <- rdata[,c("UserID")]
+Connect <- rdata[,c("CONNECT")]
+Epoch_time <- rdata[,c("epoch_time")]
+user_allowed_authorization <- rdata[,c("user_allowed_authorization")]
+email_login_submitted <- rdata[,c("email_login_submitted")]
+user_succeeded_authentication <- rdata[,c("user_succeeded_authentication")]
+
+```
+### Feature selection and corelation between the most observable data
+```{r feature selection}
+reg=regsubsets(timeStamp ~ epoch_time +UserID + CONNECT + user_allowed_authorization + user_succeeded_authentication + msisdn_login_submitted,  data=dataobj, method="backward")
+```
+
+```{r}
+#Explanation of the result of summary
+#for the best subset of size 1, it puts 1 star next to the variable that's in the best subset of size 1.
+#for the best subset of size 2, it puts 2 stars next to the variables that are in the best subset of size 2
+#..
+##for the best subset of size n, it puts n stars next to the variables that are in the best subset of size n
+summary(reg)
+```
+
+```{r}
+library("lattice")
+```
+
+```{r}
+xyplot(UserID ~ Timestamp, data = rdata,
+  xlab = "Number of User on log scale",
+  ylab = "Timestamp (seconds) on log scale",
+  main = "User Log in time"
+)
+
+```
+```{r}
+
+library("hexbin")
+hexbinplot(UserID ~ epoch_time, dataobj,
+          scales = list(x = list(log = 10, equispaced.log = FALSE)),
+           aspect = 1, bins=50)
+```
+
+
+```{r}
+# diagnostic plots 
+layout(matrix(c(1,2,3,4),8,8)) # optional 4 graphs/page 
+plot(reg)
+
+```
+```{r}
+plot(reg,scale="adjr2")
+```
+
+#Data Modeling
+
+```{r linear modeling}
+con.mod1 = lm(UserID ~ Connect + Timestamp, data = rdata)
+summary(con.mod1)
+# Summary Description
+# The estimates for the model intercept is 6.097e+14 and the coefficient measuring the slope of the relationship with CONNECT status is -3.746e+10 and information about standard errors of these estimates is also provided in the Coefficients table. We see that the test of significance of the model coefficients is also summarised in that table so we can see that there is strong evidence that the coefficient is significantly different to zero – as the snout vent length increases so does the weight.
+```
+
+```{r}
+#A plot of the residuals against fitted values is used to determine whether there are any systematic patterns, such as over estimation for most of the large values or increasing spread as the model fitted values increase.
+xyplot(resid(con.mod1) ~ fitted(con.mod1),
+  xlab = "Fitted Values",
+  ylab = "Residuals",
+  main = "Residual Diagnostic Plot",
+  panel = function(x, y, ...)
+  {
+    panel.grid(h = -1, v = -1)
+    panel.abline(h = 0)
+    panel.xyplot(x, y, ...)
+  }
+)
+```
+```{r}
+#The plot is probably ok but there are more cases of positive residuals and when we consider a normal probability plot we see that there are some deficiencies with the model:
+#The function resid extracts the model residuals from the fitted model object. The plot is shown here:
+qqmath( ~ resid(con.mod1),
+  xlab = "Theoretical Quantiles",
+  ylab = "Residuals"
+)
+
+```
+
+
