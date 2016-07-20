@@ -2,7 +2,7 @@
 title: "featureselection"
 author: "sarwar"
 date: "July 19, 2016"
-output: word_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -35,6 +35,10 @@ knitr::opts_chunk$set(echo = TRUE)
 #7. Predict value using the regression modle
 #8. Cross validate the prediction model
 
+```
+##Model Evaluation
+```{r}
+#We can check if a model works well for data in many different ways. We pay great attention to regression results, such as slope coefficients, p-values, or R2 that tell us how well a model represents given data. Residuals could also show how poorly a model represents data. Residuals are leftover of the outcome variable after fitting a model (predictors) to data and they could reveal unexplained patterns in the data by the fitted model. Using this information, not only we could check if linear regression assumptions are met, but we could improve the proposed model in an exploratory way.
 ```
 
 ```{r packages}
@@ -87,6 +91,8 @@ library("lattice")
 ```
 
 ```{r}
+# The XY Graph (a Scatter Plot) is a flexible graphing reporting tool for plotting data pairs. It is very useful when analyzing the correlation between readings from two or more sensors.  The XY-Graph may be used as an alternative to wind rose presentation, and to systematically compare sensor data when seeking hidden correlation.
+
 xyplot(UserID ~ Timestamp, data = rdata,
   xlab = "Number of User on log scale",
   ylab = "Timestamp (seconds) on log scale",
@@ -96,6 +102,8 @@ xyplot(UserID ~ Timestamp, data = rdata,
 ```
 
 ```{r}
+# hexbinplot creates a hexbin object from data supplied to it and plots it usinggrid.hexagons. To make panels comparable, all panels have the same maxcnt value, by default the maximum count over all panels. The hex-binned heat map reminds me of the effect of using transparency to overcome overplotting. You see a faint light-blue haze where the density of points is low. Dark colors indicate regions for which the density of points is high (more than 50 points per bin, for this example).
+# This hex-binned diagram can be a useful alternative to a scatter plot when the scatter plot suffers from overplotting or when you want to estimate the density of the observations.
 
 library("hexbin")
 hexbinplot(UserID ~ epoch_time, dataobj,
@@ -104,7 +112,7 @@ hexbinplot(UserID ~ epoch_time, dataobj,
 ```
 
 ```{r}
-# diagnostic plots 
+# diagnostic plots: In order to diagonise the linear model 
 layout(matrix(c(1,2,3,4),8,8)) # optional 4 graphs/page 
 plot(reg)
 
@@ -157,6 +165,7 @@ qqmath( ~ resid(con.mod1),
   ylab = "Residuals"
 )
 
+#This plot shows if residuals are normally distributed. Do residuals follow a straight line well or do they deviate severely? It’s good if residuals are lined well on the straight dashed line.
 ```
 
 ## Logistic Regression Model
@@ -179,5 +188,11 @@ sapply(rdata,sd)
 ## two-way contingency table of categorical outcome and predictors
 ## we want to make sure there are not 0 cells
 xtabs(~ UserID + CONNECT, data = rdata)
+```
+
+```{r}
+mylogit <- glm(CONNECT ~ UserID + Timestamp + user_allowed_authorization, data = dataobj, family = "binomial")
+summary(mylogit)
+
 ```
 
